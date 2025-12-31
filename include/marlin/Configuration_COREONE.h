@@ -539,12 +539,40 @@
 //#define DISTINCT_E_FACTORS
 
 /**
+ * Pulley Scaling Factor
+ *
+ * This is used to scale the steps per unit for the X and Y axes to
+ * restore dimensional accuracy when using pulleys that have a different
+ * diameter than the stock pulleys.
+ *
+ * When using 1.5mm pitch belts, the pulleys that are most similar in
+ * diameter to the stock pulleys have 21 teeth instead of the stock 16
+ * teeth.
+ *
+ * To determine the scaling factor, we calculate:
+ *
+ * factor = old pitch diameter / new pitch diameter
+ * factor = (16t * 2mm / pi) / (21t * 1.5mm / pi)
+ * factor = 32 / 31.5
+ *
+ * We can intuit this to be correct because the new pulleys have a
+ * slightly smaller diameter, and so must rotate *more* to cover the
+ * same distance.
+ */
+#define BELT_PITCH_1_5_MM
+#ifdef BELT_PITCH_1_5_MM
+    #define PULLEY_SCALING_FACTOR (32.0f / 31.5f)
+#else
+    #define PULLEY_SCALING_FACTOR 1.0f
+#endif
+
+/**
  * Default Axis Steps Per Unit (steps/mm)
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
 #define DEFAULT_AXIS_STEPS_PER_UNIT \
-    { 100, 100, 400, 380 }
+    { (100.0f * PULLEY_SCALING_FACTOR), (100.0f * PULLEY_SCALING_FACTOR), 400, 380 }
 
 /**
  * Default Max Feed Rate (mm/s)
