@@ -2254,6 +2254,7 @@ static void _server_print_loop(void) {
         break;
     case State::Pausing_WaitIdle:
         if (!is_processing()) {
+            server.resume.pos = current_position;
             park_head();
             server.print_state = State::Pausing_ParkHead;
         }
@@ -3031,7 +3032,6 @@ static void lift_head() {
 }
 
 static void park_head() {
-    server.resume.pos = current_position;
     retract();
     lift_head();
 
