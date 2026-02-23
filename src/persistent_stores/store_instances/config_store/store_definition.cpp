@@ -462,6 +462,9 @@ void CurrentStore::set_tool_offset(uint8_t index, ToolOffset value) {
 #endif
 
 FilamentType CurrentStore::get_filament_type([[maybe_unused]] uint8_t index) {
+    if (loaded_filament_is_previous.get()[index]) {
+        return FilamentType::none;
+    }
     return loaded_filament_type.get(index);
 }
 
@@ -471,14 +474,29 @@ void CurrentStore::set_filament_type(uint8_t index, FilamentType value) {
         value.set_parameters(pending_adhoc_filament_parameters);
     }
 
-#if HAS_AUTO_RETRACT()
     if (value == FilamentType::none) {
+#if HAS_AUTO_RETRACT()
         // On filament removal, it invalidates retracted distance
         buddy::auto_retract().set_retracted_distance(HAS_TOOLCHANGER() ? index : 0, std::nullopt);
-    }
 #endif
 
-    loaded_filament_type.set(index, value);
+        loaded_filament_is_previous.apply([&](auto &item) {
+            item.set(index, true);
+        });
+    } else {
+        loaded_filament_type.set(index, value);
+        loaded_filament_is_previous.apply([&](auto &item) {
+            item.set(index, false);
+        });
+    }
+}
+
+FilamentType CurrentStore::get_previous_filament_type(uint8_t index) {
+    if (loaded_filament_is_previous.get()[index]) {
+        return loaded_filament_type.get(index);
+    } else {
+        return FilamentType::none;
+    }
 }
 
 float CurrentStore::get_nozzle_diameter([[maybe_unused]] uint8_t index) {
