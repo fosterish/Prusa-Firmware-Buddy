@@ -13,6 +13,7 @@
 #include <mapi/motion.hpp>
 #include <mapi/parking.hpp>
 #include <gcode/temperature/M104_M109.hpp>
+#include <module/raii/include/raii/scope_guard.hpp>
 
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
@@ -64,7 +65,7 @@ void AutoRetract::set_retracted_distance(uint8_t hotend, std::optional<float> di
 }
 
 void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_callback) {
-    if (!ready_to_extrude()) {
+    if (planner.draining()) {
         return;
     }
 
@@ -87,6 +88,23 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
 
     PrintStatusMessageGuard psm_guard;
     psm_guard.update<PrintStatusMessage::Type::auto_retracting>({});
+
+    // restore actual target temperature after autorectract
+    const auto original_temp = thermalManager.degTargetHotend(hotend);
+    ScopeGuard temp_restorer([&]() {
+        thermalManager.setTargetHotend(original_temp, hotend);
+    });
+
+    // heat up the nozzle (especially important for INDX where nozzle can cool down before autoretract is finished)
+    const auto filament_temp = config_store().get_filament_type(hotend).parameters().nozzle_temperature;
+    if (original_temp < filament_temp) {
+        const M109Flags flags = {
+            .target_temp = static_cast<float>(filament_temp),
+            .wait_heat = true,
+            .wait_heat_or_cool = false,
+        };
+        M109_no_parser(hotend, flags);
+    }
 
 #if HAS_NOZZLE_CLEANER()
     // If we have nozzle cleaner, make sure we are parked over the bin to avoid pooping on the bed
