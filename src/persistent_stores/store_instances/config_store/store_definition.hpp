@@ -419,6 +419,8 @@ struct CurrentStore
 
     FilamentType get_previous_filament_type(uint8_t index);
 
+    void clear_previous_filament_type(uint8_t index);
+
     // Note: hash is kept for backwards compatibility
     StoreItem<bool, false, ItemFlag::features, journal::hash("Heatup Bed")> filament_change_preheat_all;
 
@@ -440,8 +442,16 @@ struct CurrentStore
     /// Stores whether a nozzle is hardened (resistant to abrasive filament) or not. One bit per each hotend
     StoreItem<std::bitset<8>, defaults::nozzle_is_hardened, ItemFlag::hw_config, journal::hash("Nozzle is Hardened")> nozzle_is_hardened;
 
+    bool get_nozzle_is_hardened(uint8_t index);
+
+    void set_nozzle_is_hardened(uint8_t index, bool value);
+
     /// Stores whether a nozzle is high-flow (supports high-flow print profile) or not. One bit per each hotend
     StoreItem<std::bitset<8>, defaults::nozzle_is_high_flow, ItemFlag::hw_config, journal::hash("Nozzle is High-Flow")> nozzle_is_high_flow;
+
+    bool get_nozzle_is_high_flow(uint8_t index);
+
+    void set_nozzle_is_high_flow(uint8_t index, bool value);
 
     StoreItem<float, 0.0f, ItemFlag::calibrations, journal::hash("Homing Bump Divisor X")> homing_bump_divisor_x;
     StoreItem<float, 0.0f, ItemFlag::calibrations, journal::hash("Homing Bump Divisor Y")> homing_bump_divisor_y;

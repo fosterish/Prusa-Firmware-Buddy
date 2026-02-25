@@ -499,6 +499,12 @@ FilamentType CurrentStore::get_previous_filament_type(uint8_t index) {
     }
 }
 
+void CurrentStore::clear_previous_filament_type(uint8_t index) {
+    if (loaded_filament_is_previous.get()[index]) {
+        loaded_filament_type.set(index, EncodedFilamentType {});
+    }
+}
+
 float CurrentStore::get_nozzle_diameter([[maybe_unused]] uint8_t index) {
 #if HOTENDS <= 1
     assert(index == 0);
@@ -553,6 +559,29 @@ void CurrentStore::set_nozzle_diameter([[maybe_unused]] uint8_t index, float val
         return;
     }
 #endif
+    clear_previous_filament_type(index);
+}
+
+bool CurrentStore::get_nozzle_is_hardened([[maybe_unused]] uint8_t index) {
+    return nozzle_is_hardened.get()[index];
+}
+
+void CurrentStore::set_nozzle_is_hardened([[maybe_unused]] uint8_t index, bool value) {
+    nozzle_is_hardened.apply([&](auto &item) {
+        item.set(index, value);
+    });
+    clear_previous_filament_type(index);
+}
+
+bool CurrentStore::get_nozzle_is_high_flow([[maybe_unused]] uint8_t index) {
+    return nozzle_is_high_flow.get()[index];
+}
+
+void CurrentStore::set_nozzle_is_high_flow([[maybe_unused]] uint8_t index, bool value) {
+    nozzle_is_high_flow.apply([&](auto &item) {
+        item.set(index, value);
+    });
+    clear_previous_filament_type(index);
 }
 
 float CurrentStore::get_odometer_axis(uint8_t index) {
