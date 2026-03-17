@@ -100,6 +100,8 @@
   #include <feature/ceiling_clearance/ceiling_clearance.hpp>
 #endif
 
+#include <serial_logging_disabler.hpp>
+
 #define XYZ_CONSTS(T, NAME, OPT) const PROGMEM XYZval<T> NAME##_P = { X_##OPT, Y_##OPT, Z_##OPT }
 
 XYZ_CONSTS(float, base_min_pos,   MIN_POS);
@@ -200,6 +202,8 @@ xyz_pos_t cartes;
  * Output the current position to serial
  */
 void report_current_position() {
+  // Do not log coordinates, only print to serial
+  SerialLoggingDisabler sld;
   const xyz_pos_t lpos = current_position.asLogical();
   SERIAL_ECHOPAIR("X:", lpos.x, " Y:", lpos.y, " Z:", lpos.z, " E:", current_position.e);
 
