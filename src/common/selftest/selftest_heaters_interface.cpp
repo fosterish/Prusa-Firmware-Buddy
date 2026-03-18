@@ -21,6 +21,11 @@
     #include "power_check_both.hpp"
 #endif
 
+#include <option/has_puppy_modularbed.h>
+#if HAS_PUPPY_MODULARBED()
+    #include "puppies/modular_bed.hpp"
+#endif
+
 LOG_COMPONENT_REF(Selftest);
 namespace selftest {
 
@@ -108,6 +113,10 @@ void phaseHeaters_noz_ena(std::array<IPartHandler *, HOTENDS> &pNozzles, const s
 }
 
 void phaseHeaters_bed_ena(IPartHandler *&pBed, const HeaterConfig_t &config_bed) {
+#if HAS_PUPPY_MODULARBED()
+    buddy::puppies::modular_bed.set_enable_bedlet_connected_check(true);
+#endif
+
     // Hack: only if we're running both bed and nozzle test together
     // NOTE: yes, terrible, depends on enabling nozzle test first and bed test second
     if (resultHeaters.tested_parts & to_one_hot(SelftestHeaters_t::TestedParts::noz)) {
@@ -205,6 +214,9 @@ bool phaseHeaters(std::array<IPartHandler *, HOTENDS> &pNozzles, IPartHandler **
 
     if (just_finished_bed) {
         assert(pBed && *pBed);
+#if HAS_PUPPY_MODULARBED()
+        buddy::puppies::modular_bed.set_enable_bedlet_connected_check(false);
+#endif
 #if HAS_SELFTEST_POWER_CHECK_BOTH()
         PowerCheckBoth::Instance().UnBindBed();
 #endif
