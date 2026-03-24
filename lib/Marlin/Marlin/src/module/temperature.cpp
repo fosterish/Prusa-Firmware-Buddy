@@ -82,6 +82,7 @@
 #include <option/board_is_master_board.h>
 #if BOARD_IS_MASTER_BOARD()
   #include <feature/safety_timer/safety_timer.hpp>
+  #include <config_store/store_instance.hpp>
 #endif
 
 #include <option/has_ac_controller.h>
@@ -91,6 +92,8 @@
 #include <option/has_modular_bed.h>
 #include <utils/serial_logging_disabler.hpp>
 #include <raii/scope_guard.hpp>
+
+#include <fanctl.hpp>
 
 #if HAS_AC_CONTROLLER()
     #include <puppies/ac_controller.hpp>
@@ -727,13 +730,6 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
         SBI(fanState, pgm_read_byte(&fanBit[CHAMBER_FAN_INDEX]));
     #endif
 
-    #define _UPDATE_AUTO_FAN(P,D,A) do{                  \
-      if (PWM_PIN(P##_AUTO_FAN_PIN) && A < 255)          \
-        analogWrite(pin_t(P##_AUTO_FAN_PIN), D ? A : 0); \
-      else                                               \
-        WRITE(P##_AUTO_FAN_PIN, D);                      \
-    }while(0)
-
     uint8_t fanDone = 0;
     for (uint8_t f = 0; f < COUNT(fanBit); f++) {
       const uint8_t realFan = pgm_read_byte(&fanBit[f]);
@@ -754,25 +750,31 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
 
       switch (f) {
         #if HAS_AUTO_FAN_0
-          case 0: _UPDATE_AUTO_FAN(E0, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
+
+#if PRINTER_IS_PRUSA_MK3_5()
+        // PWM value of 80 roughly translates to 4k RPM, further testing my find better value, thus far this seems precise enough plus it is the value used by MINI which uses the same fans
+        case 0: Fans::heat_break(0).set_pwm(fan_on ? (config_store().has_alt_fans.get() ? 80 : 255) : 0);
+#else
+        case 0: Fans::heat_break(0).set_pwm(fan_on ? 80 : 0);
+#endif
         #endif
         #if HAS_AUTO_FAN_1
-          case 1: _UPDATE_AUTO_FAN(E1, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
+          #error
         #endif
         #if HAS_AUTO_FAN_2
-          case 2: _UPDATE_AUTO_FAN(E2, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
+          #error
         #endif
         #if HAS_AUTO_FAN_3
-          case 3: _UPDATE_AUTO_FAN(E3, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
+          #error
         #endif
         #if HAS_AUTO_FAN_4
-          case 4: _UPDATE_AUTO_FAN(E4, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
+          #error
         #endif
         #if HAS_AUTO_FAN_5
-          case 5: _UPDATE_AUTO_FAN(E5, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
+          #error
         #endif
         #if HAS_AUTO_CHAMBER_FAN && !AUTO_CHAMBER_IS_E
-          case CHAMBER_FAN_INDEX: _UPDATE_AUTO_FAN(CHAMBER, fan_on, CHAMBER_AUTO_FAN_SPEED); break;
+          #error
         #endif
       }
       SBI(fanDone, realFan);
@@ -1587,7 +1589,8 @@ void Temperature::manage_heater() {
               temp_heatbreak[0].soft_pwm_amount = MAX_HEATBREAK_POWER >> 1;
           #elif ENABLED(PIDTEMPHEATBREAK)
             temp_heatbreak[0].soft_pwm_amount = (int)get_pid_output_heatbreak();
-            set_fan_speed(HEATBREAK_FAN_ID, temp_heatbreak[0].soft_pwm_amount);
+            // direct heatbreak fan control (BFW-8504)
+            Fans::heat_break(0).set_pwm(temp_heatbreak[0].soft_pwm_amount);
           #endif
         } else {
           #if WATCH_HEATBREAK
@@ -1596,7 +1599,8 @@ void Temperature::manage_heater() {
           }
           #endif
           temp_heatbreak[0].soft_pwm_amount = 255;
-          set_fan_speed(HEATBREAK_FAN_ID, temp_heatbreak[0].soft_pwm_amount);
+          // direct heatbreak fan control (BFW-8504)
+          Fans::heat_break(0).set_pwm(temp_heatbreak[0].soft_pwm_amount);
         }
       #endif
     }
