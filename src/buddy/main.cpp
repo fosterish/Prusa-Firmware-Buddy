@@ -340,7 +340,7 @@ extern "C" void main_cpp(void) {
             TaskDeps::wait(TaskDeps::Tasks::network);
             start_network_task(/*allow_full=*/false);
             // definition and creation of connectTask
-            TaskDeps::wait(TaskDeps::Tasks::connect);
+            TaskDeps::wait(TaskDeps::Tasks::connect_error);
             connectTaskHandle = osThreadCreate(osThread(connectTask), NULL);
         }
 #endif
@@ -524,7 +524,7 @@ extern "C" void main_cpp(void) {
     // thus it must not be used for the ESP -> no networking tasks shall be started.
     if (!running_in_tester_mode()) {
         // definition and creation of connectTask
-        TaskDeps::wait(TaskDeps::Tasks::connect);
+        TaskDeps::wait(TaskDeps::Tasks::connect_full);
         connectTaskHandle = osThreadCreate(osThread(connectTask), NULL);
     }
 #endif
