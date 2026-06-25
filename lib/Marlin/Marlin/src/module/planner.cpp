@@ -2510,16 +2510,16 @@ bool Planner::buffer_segment(const abce_pos_t &abce
 
   /* <-- add a slash to enable
     SERIAL_ECHOPAIR("  buffer_segment FR:", fr_mm_s);
-    SERIAL_ECHOPAIR(" X:", a);
+    SERIAL_ECHOPAIR(" X:", abce.a);
     SERIAL_ECHOPAIR(" (", position.x);
     SERIAL_ECHOPAIR("->", target.x);
-    SERIAL_ECHOPAIR(") Y:", b);
+    SERIAL_ECHOPAIR(") Y:", abce.b);
     SERIAL_ECHOPAIR(" (", position.y);
     SERIAL_ECHOPAIR("->", target.y);
-    SERIAL_ECHOPAIR(") Z:", c);
+    SERIAL_ECHOPAIR(") Z:", abce.c);
     SERIAL_ECHOPAIR(" (", position.z);
     SERIAL_ECHOPAIR("->", target.z);
-    SERIAL_ECHOPAIR(") E:", e);
+    SERIAL_ECHOPAIR(") E:", abce.e);
     SERIAL_ECHOPAIR(" (", position.e);
     SERIAL_ECHOPAIR("->", target.e);
     SERIAL_ECHOLNPGM(")");
