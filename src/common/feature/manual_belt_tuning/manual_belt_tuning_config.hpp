@@ -15,11 +15,10 @@ constexpr uint16_t freq_max = 130;
 constexpr uint16_t accel_min = 7000;
 constexpr uint16_t accel_max = 10500;
 
-// 1m length belt waight
-// Note iX has GT1.5 belts, but the weight difference was deemed insignificant
-constexpr float nominal_weight_kg_m = 0.007569f;
-
 #if PRINTER_IS_PRUSA_COREONE()
+
+// 1m length belt weight (measured for the 1.5GT belts fitted to this printer)
+constexpr float nominal_weight_kg_m = 0.008952f;
 
 // avg belt length (vibrating part)
 constexpr float length_belt = 0.267f;
@@ -42,6 +41,9 @@ constexpr uint16_t tension_optimal_N = 19;
 
 #elif PRINTER_IS_PRUSA_COREONEL()
 
+// 1m length belt weight
+constexpr float nominal_weight_kg_m = 0.007569f;
+
 // top belt length (vibrating part) 318 - 6.5 = 311.5mm
 constexpr float length_top_belt = 0.3115f;
 // bottom belt length (vibrating part) 318 + 6.5 = 324.5mm
@@ -60,6 +62,10 @@ constexpr uint16_t belt_hz_per_rev2 = 10;
 constexpr uint16_t tension_optimal_N = 25;
 
 #elif PRINTER_IS_PRUSA_iX()
+
+// 1m length belt weight
+// Note iX has GT1.5 belts, but the weight difference was deemed insignificant
+constexpr float nominal_weight_kg_m = 0.007569f;
 
 // avg belt length (vibrating part)
 constexpr float length_belt = 0.3f;
@@ -113,14 +119,14 @@ constexpr float calc_revs_from_freq(float df1, float df2, float k1, float k2) {
     return ((df2 * k2) - (df1 * k1)) / ((k2 * k2) - (k1 * k1));
 }
 
-constexpr float floor_to_half(float val) {
-    return static_cast<float>(static_cast<int>(val * 2)) / 2.0f;
+constexpr float round_to_half(float val) {
+    return static_cast<float>(static_cast<int>(val * 2 + 0.5f)) / 2.0f;
 }
 
 // optimal frequency for top belt (in some cases lower belt has higher freq and optimal frequencies are switched)
-constexpr float higher_freq_belt_optimal = floor_to_half(tension_to_freq(tension_optimal_N, length_top_belt));
+constexpr float higher_freq_belt_optimal = round_to_half(tension_to_freq(tension_optimal_N, length_top_belt));
 // optimal frequency for bottom belt (in some cases lower belt has higher freq and optimal frequencies are switched)
-constexpr float lower_freq_belt_optimal = floor_to_half(tension_to_freq(tension_optimal_N, length_bottom_belt));
+constexpr float lower_freq_belt_optimal = round_to_half(tension_to_freq(tension_optimal_N, length_bottom_belt));
 
 // outside measurements are considered to have x-gantry misalignment
 constexpr uint16_t freq_result_min = static_cast<uint16_t>(lower_freq_belt_optimal - 3);
