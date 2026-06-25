@@ -69,7 +69,7 @@ void enable_modifiers_if(bool condition, bool restore_leveling) {
     }
 
 #if ENABLED(SKEW_CORRECTION)
-    skew(current_position);
+    Planner::skew(current_position);
 #endif
 
 #if HAS_LEVELING
